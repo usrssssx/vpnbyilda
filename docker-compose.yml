@@ -1,0 +1,96 @@
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: "app"
+    # restart: always
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./.env
+    networks:
+      - app-network
+    volumes:
+      - .:/app
+
+    command: [
+      "sh", "-c",
+      "uvicorn app.presentation.main:init_api --reload --host ${WEBAPP_WEBHOOK_HOST}
+      --port ${WEBAPP_WEBHOOK_PORT} --no-access-log"
+    ]
+
+  mongo:
+    image: mongo:8.0.15
+    container_name: mongo
+    restart: always
+    ports:
+      - '27017:27017'
+    networks:
+      - app-network
+    volumes:
+      - dbdata6:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${DATABASE_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${DATABASE_PASSWORD}
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: 'true'
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    command: redis-server --save 60 1 --loglevel warning
+    networks:
+      - app-network
+    volumes:
+      - redis-data:/data
+
+  queue_worker:
+    build: .
+    container_name: "queue_worker"
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    command: taskiq worker app.workers.taskiq_worker:broker
+    networks:
+      - app-network
+
+  scheduler:
+    build: .
+    container_name: "scheduler"
+    volumes:
+      - .:/app
+    command: taskiq scheduler app.workers.taskiq_worker:scheduler
+    env_file:
+      - .env
+    networks:
+      - app-network
+
+  xui_panel:
+    image: ghcr.io/mhsanaei/3x-ui:latest
+    container_name: xui_panel
+    restart: unless-stopped
+    environment:
+      XRAY_VMESS_AEAD_FORCED: "false"
+      XUI_ENABLE_FAIL2BAN: "true"
+    volumes:
+      - xui_db:/etc/x-ui/
+      - xui_cert:/root/cert/
+    expose:
+      - "2053"
+    networks:
+      - app-network
+
+volumes:
+  dbdata6:
+  redis-data:
+  xui_db:
+  xui_cert:
+
+
+networks:
+  app-network:
+    driver: bridge

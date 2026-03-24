@@ -1,0 +1,14 @@
+
+server {
+    listen 80;
+    server_name ${WEB_APP_DOMAIN} ${API_DOMAIN} ${PANEL_DOMAIN};
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+        allow all;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
