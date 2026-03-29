@@ -78,6 +78,7 @@ cython_debug/
 
 # Temporary files
 *.tmp
+.DS_Store
 
 # Compiled Python files
 *.pyc

@@ -212,9 +212,6 @@ export default function MobileSubscriptionPage() {
                         <button className="w-full py-2.5 px-4 bg-white/10 hover:bg-white/15 rounded-lg text-sm font-medium transition flex items-center justify-center" onClick={() => navigate('/tariffs')}>
                             Оформить подписку
                         </button>
-                        <button className="w-full py-2.5 px-4 border border-white/20 bg-white/5 rounded-lg text-sm font-medium transition flex items-center justify-center" onClick={() => navigate('/trial')}>
-                            Пробный период
-                        </button>
                     </div>
 
                     {subscription && (

@@ -4,7 +4,6 @@ import Layout from './components/Layout';
 import ProfilePage from './pages/ProfilePage';
 import SubscriptionPage from './pages/SubscriptionPage';
 import TariffsPage from './pages/TariffsPage';
-import TrialPage from './pages/TrialPage';
 import VpnConnectPage from './pages/VpnConnectPage';
 import { useAuth } from './contexts/AuthContext';
 
@@ -42,7 +41,6 @@ function App() {
                 <Route path="/subscription" element={<SubscriptionPage />} />
                 <Route path="/subscriptions/:subscriptionId" element={<SubscriptionPage />} />
                 <Route path="/tariffs" element={<TariffsPage />} />
-                <Route path="/trial" element={<TrialPage />} />
                 <Route path="/vpn" element={<VpnConnectPage />} />
                 <Route path="/" element={<Navigate to="/profile" replace />} />
             </Routes>

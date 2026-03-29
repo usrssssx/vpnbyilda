@@ -309,9 +309,6 @@ export default function DesktopVpnConnectPage() {
                         <button className="w-full py-2.5 px-4 border border-white/20 hover:bg-white/5 rounded-lg text-sm font-medium transition flex items-center justify-center" onClick={() => navigate('/tariffs')}>
                             Оформить подписку
                         </button>
-                        <button className="w-full py-2.5 px-4 border border-white/20 hover:bg-white/5 rounded-lg text-sm font-medium transition flex items-center justify-center" onClick={() => navigate('/trial')}>
-                            Пробный период
-                        </button>
                     </div>
 
                     {selectedSubscription && (
