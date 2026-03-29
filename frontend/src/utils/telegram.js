@@ -10,6 +10,38 @@ export function initTelegramWebApp() {
     return webApp;
 }
 
+export async function waitForTelegramWebApp({ timeoutMs = 2500, intervalMs = 100 } = {}) {
+    const startedAt = Date.now();
+
+    while (Date.now() - startedAt < timeoutMs) {
+        const webApp = window.Telegram?.WebApp;
+
+        if (webApp) {
+            return webApp;
+        }
+
+        await new Promise((resolve) => window.setTimeout(resolve, intervalMs));
+    }
+
+    return null;
+}
+
+export async function waitForTelegramInitData({ timeoutMs = 2500, intervalMs = 100 } = {}) {
+    const startedAt = Date.now();
+
+    while (Date.now() - startedAt < timeoutMs) {
+        const initData = window.Telegram?.WebApp?.initData || '';
+
+        if (initData) {
+            return initData;
+        }
+
+        await new Promise((resolve) => window.setTimeout(resolve, intervalMs));
+    }
+
+    return '';
+}
+
 export function getTelegramInitData() {
     return window.Telegram?.WebApp?.initData || '';
 }

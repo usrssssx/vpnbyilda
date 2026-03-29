@@ -7,7 +7,12 @@ import {
     refreshSession,
     setAccessToken,
 } from '../services/api';
-import { getTelegramInitData, initTelegramWebApp } from '../utils/telegram';
+import {
+    getTelegramInitData,
+    initTelegramWebApp,
+    waitForTelegramInitData,
+    waitForTelegramWebApp,
+} from '../utils/telegram';
 
 const AuthContext = createContext(null);
 
@@ -24,11 +29,21 @@ export function AuthProvider({ children }) {
             setError('');
 
             try {
-                initTelegramWebApp();
-                const initData = getTelegramInitData();
+                let initData = '';
+                const webApp = await waitForTelegramWebApp();
+
+                if (webApp) {
+                    initTelegramWebApp();
+                    initData = getTelegramInitData() || await waitForTelegramInitData();
+                }
 
                 if (initData) {
-                    await loginByTelegram(initData);
+                    try {
+                        await loginByTelegram(initData);
+                    } catch (loginError) {
+                        await new Promise((resolve) => window.setTimeout(resolve, 350));
+                        await loginByTelegram(initData);
+                    }
                 } else {
                     await refreshSession();
                 }
