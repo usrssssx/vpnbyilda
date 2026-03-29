@@ -1,4 +1,11 @@
 services:
+  app:
+    restart: unless-stopped
+    command: [
+      "sh", "-c",
+      "uvicorn app.presentation.main:init_api --factory --host ${WEBAPP_WEBHOOK_HOST} --port ${WEBAPP_WEBHOOK_PORT} --no-access-log"
+    ]
+
   frontend:
     build:
       context: ./frontend
@@ -17,6 +24,7 @@ services:
     env_file:
       - ./.env
     depends_on:
+      - app
       - certbot
       - frontend
     ports:
