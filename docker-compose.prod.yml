@@ -5,6 +5,12 @@ services:
       "sh", "-c",
       "uvicorn app.presentation.main:init_api --factory --host ${WEBAPP_WEBHOOK_HOST} --port ${WEBAPP_WEBHOOK_PORT} --no-access-log"
     ]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s=socket.create_connection(('127.0.0.1', 8080), 2); s.close()"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
   frontend:
     build:
@@ -24,9 +30,12 @@ services:
     env_file:
       - ./.env
     depends_on:
-      - app
-      - certbot
-      - frontend
+      app:
+        condition: service_healthy
+      certbot:
+        condition: service_started
+      frontend:
+        condition: service_started
     ports:
       - "80:80"
       - "443:443"
