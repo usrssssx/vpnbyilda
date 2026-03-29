@@ -38,6 +38,7 @@ class BaseMediaBuilder:
     _photo: str = ""
     _caption: str = ""
     _reply_markup: Any = None
+    _parse_mode: str | None = None
 
     @property
     def photo(self) -> str:
@@ -51,10 +52,18 @@ class BaseMediaBuilder:
     def caption(self) -> str:
         return self._caption
 
+    @property
+    def parse_mode(self) -> str | None:
+        return self._parse_mode
+
     def build(self,  *args, **kwargs) -> dict[str, Any]:
         content = {}
 
-        media = InputMediaPhoto(media=photo_manager.get_image_id(self.photo), caption=self.caption)
+        media = InputMediaPhoto(
+            media=photo_manager.get_image_id(self.photo),
+            caption=self.caption,
+            parse_mode=self.parse_mode
+        )
         content['media'] = media
 
         if self.reply_markup:

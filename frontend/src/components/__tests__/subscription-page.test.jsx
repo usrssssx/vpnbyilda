@@ -1,115 +1,72 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import DesktopSubscriptionPage from '../desktop/SubscriptionPage';
-import { subscriptionActive, subscriptionCanceled } from '../../test/fixtures';
-import { useSubscriptionDetails, useSubscriptions } from '../../hooks/useSubscriptions';
-import { cancelSubscription } from '../../services/api';
-import { confirmAppAction, showAppAlert } from '../../utils/telegram';
+import { fireEvent, render, screen } from '@testing-library/react';
+import TariffsScreen from '../app/TariffsScreen';
+import { subscriptionActive } from '../../test/fixtures';
+import { useTariffFlow } from '../../hooks/useTariffFlow';
 
 const navigate = vi.fn();
+const submitSelectedPlan = vi.fn();
+const setSelectedPlanId = vi.fn();
 
-vi.mock('../../../TelegramUser', () => ({
-    default: { getUser: () => ({ firstName: 'Ivan', lastName: 'Petrov', username: 'ivanpetrov', initials: 'IP', photoUrl: null }) },
+vi.mock('../../hooks/useTariffFlow', () => ({
+    useTariffFlow: vi.fn(),
 }));
 
-vi.mock('../../hooks/useSubscriptions', () => ({
-    useSubscriptionDetails: vi.fn(),
-    useSubscriptions: vi.fn(),
-}));
-
-vi.mock('../../services/api', () => ({
-    cancelSubscription: vi.fn(),
-}));
-
-vi.mock('../../utils/telegram', async () => {
-    const actual = await vi.importActual('../../utils/telegram');
+vi.mock('react-router-dom', async () => {
+    const actual = await vi.importActual('react-router-dom');
     return {
         ...actual,
-        confirmAppAction: vi.fn(),
-        showAppAlert: vi.fn(),
+        useNavigate: () => navigate,
     };
 });
 
-vi.mock('react-router-dom', () => ({
-    useNavigate: () => navigate,
-    useParams: () => ({ subscriptionId: 'sub-active' }),
-}));
-
-describe('DesktopSubscriptionPage', () => {
+describe('TariffsScreen', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         navigate.mockReset();
+        submitSelectedPlan.mockReset();
+        setSelectedPlanId.mockReset();
+        useTariffFlow.mockReturnValue({
+            plans: [
+                { id: 0, name: '1 месяц', durationDays: 30, price: 60, monthlyPrice: 60, savings: 0 },
+                { id: 1, name: '3 месяца', durationDays: 90, price: 180, monthlyPrice: 60, savings: 30 },
+                { id: 2, name: '6 месяцев', durationDays: 180, price: 300, monthlyPrice: 50, savings: 60 },
+            ],
+            selectedPlan: { id: 0, name: '1 месяц', durationDays: 30, price: 60, monthlyPrice: 60, savings: 0 },
+            selectedPlanId: 0,
+            setSelectedPlanId,
+            isSubmitting: false,
+            isRenewalFlow: true,
+            latestSubscription: subscriptionActive,
+            submitSelectedPlan,
+        });
     });
 
-    test('shows only real subscription fields', () => {
-        useSubscriptionDetails.mockReturnValue({
-            subscription: subscriptionActive,
-            price: 199,
-            isLoading: false,
-            error: '',
-            reload: vi.fn(),
-        });
-        useSubscriptions.mockReturnValue({ reloadSubscriptions: vi.fn() });
+    test('shows current tariff badge and renew CTA for existing subscription', () => {
+        render(<TariffsScreen />);
 
-        render(<DesktopSubscriptionPage />);
-
-        expect(screen.getAllByText('🇩🇪 Германия (DE)')).toHaveLength(2);
-        expect(screen.getByText('VLESS')).toBeInTheDocument();
-        expect(screen.queryByText(/06\/27/)).not.toBeInTheDocument();
-        expect(screen.queryByText(/История платежей/i)).not.toBeInTheDocument();
+        expect(screen.getByText('Текущий тариф')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Продлить и перейти к оплате/i })).toBeInTheDocument();
     });
 
-    test('cancel flow confirms, calls API and reloads', async () => {
-        const reload = vi.fn().mockResolvedValue(undefined);
-        const reloadSubscriptions = vi.fn().mockResolvedValue(undefined);
-        useSubscriptionDetails.mockReturnValue({
-            subscription: subscriptionActive,
-            price: 199,
-            isLoading: false,
-            error: '',
-            reload,
+    test('submits selected plan', () => {
+        useTariffFlow.mockReturnValue({
+            plans: [
+                { id: 0, name: '1 месяц', durationDays: 30, price: 60, monthlyPrice: 60, savings: 0 },
+                { id: 1, name: '3 месяца', durationDays: 90, price: 180, monthlyPrice: 60, savings: 30 },
+                { id: 2, name: '6 месяцев', durationDays: 180, price: 300, monthlyPrice: 50, savings: 60 },
+            ],
+            selectedPlan: { id: 2, name: '6 месяцев', durationDays: 180, price: 300, monthlyPrice: 50, savings: 60 },
+            selectedPlanId: 2,
+            setSelectedPlanId,
+            isSubmitting: false,
+            isRenewalFlow: false,
+            latestSubscription: null,
+            submitSelectedPlan,
         });
-        useSubscriptions.mockReturnValue({ reloadSubscriptions });
-        confirmAppAction.mockResolvedValue(true);
-        cancelSubscription.mockResolvedValue(subscriptionCanceled);
 
-        render(<DesktopSubscriptionPage />);
-        fireEvent.click(screen.getByRole('button', { name: 'Отменить подписку' }));
+        render(<TariffsScreen />);
+        fireEvent.click(screen.getByRole('button', { name: /Открыть доступ и перейти к оплате/i }));
 
-        await waitFor(() => expect(cancelSubscription).toHaveBeenCalledWith(subscriptionActive.id));
-        expect(reload).toHaveBeenCalled();
-        expect(reloadSubscriptions).toHaveBeenCalled();
-    });
-
-    test('cancel disabled for inactive subscription', () => {
-        useSubscriptionDetails.mockReturnValue({
-            subscription: subscriptionCanceled,
-            price: 199,
-            isLoading: false,
-            error: '',
-            reload: vi.fn(),
-        });
-        useSubscriptions.mockReturnValue({ reloadSubscriptions: vi.fn() });
-
-        render(<DesktopSubscriptionPage />);
-
-        expect(screen.getByRole('button', { name: 'Отменить подписку' })).toBeDisabled();
-    });
-
-    test('cancel error shows alert', async () => {
-        useSubscriptionDetails.mockReturnValue({
-            subscription: subscriptionActive,
-            price: 199,
-            isLoading: false,
-            error: '',
-            reload: vi.fn(),
-        });
-        useSubscriptions.mockReturnValue({ reloadSubscriptions: vi.fn() });
-        confirmAppAction.mockResolvedValue(true);
-        cancelSubscription.mockRejectedValue({ response: { data: { detail: 'cancel failed' } } });
-
-        render(<DesktopSubscriptionPage />);
-        fireEvent.click(screen.getByRole('button', { name: 'Отменить подписку' }));
-
-        await waitFor(() => expect(showAppAlert).toHaveBeenCalledWith('cancel failed'));
+        expect(submitSelectedPlan).toHaveBeenCalled();
     });
 });

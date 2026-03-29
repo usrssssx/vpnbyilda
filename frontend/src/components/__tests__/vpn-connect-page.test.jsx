@@ -1,15 +1,12 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import DesktopVpnConnectPage from '../desktop/VpnConnectPage';
-import { configListMultiple, configListSingle, subscriptionActive, subscriptionCanceled, subscriptionExpired } from '../../test/fixtures';
+import ConfigScreen from '../app/ConfigScreen';
+import { configListMultiple, subscriptionActive, subscriptionExpired } from '../../test/fixtures';
 import { useSubscriptions } from '../../hooks/useSubscriptions';
 import { fetchSubscriptionConfig } from '../../services/api';
-import { openExternalLink } from '../../utils/telegram';
+import { openExternalLink, showAppAlert } from '../../utils/telegram';
+import { copyText } from '../../utils/clipboard';
 
 const navigate = vi.fn();
-
-vi.mock('../../../TelegramUser', () => ({
-    default: { getUser: () => ({ firstName: 'Ivan', lastName: 'Petrov', username: 'ivanpetrov', initials: 'IP', photoUrl: null }) },
-}));
 
 vi.mock('../../hooks/useSubscriptions', () => ({
     useSubscriptions: vi.fn(),
@@ -19,89 +16,80 @@ vi.mock('../../services/api', () => ({
     fetchSubscriptionConfig: vi.fn(),
 }));
 
-vi.mock('../../utils/telegram', async () => {
-    const actual = await vi.importActual('../../utils/telegram');
-    return { ...actual, openExternalLink: vi.fn(), showAppAlert: vi.fn() };
-});
-
-vi.mock('react-router-dom', () => ({
-    useNavigate: () => navigate,
+vi.mock('../../utils/clipboard', () => ({
+    copyText: vi.fn(),
 }));
 
-describe('DesktopVpnConnectPage', () => {
+vi.mock('../../utils/telegram', async () => {
+    const actual = await vi.importActual('../../utils/telegram');
+    return {
+        ...actual,
+        openExternalLink: vi.fn(),
+        showAppAlert: vi.fn(),
+    };
+});
+
+vi.mock('react-router-dom', async () => {
+    const actual = await vi.importActual('react-router-dom');
+    return {
+        ...actual,
+        useNavigate: () => navigate,
+    };
+});
+
+describe('ConfigScreen', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         navigate.mockReset();
     });
 
-    test('shows tariffs CTA without subscriptions', () => {
-        useSubscriptions.mockReturnValue({ subscriptions: [], activeSubscriptions: [], isLoading: false, error: '' });
+    test('without active subscription routes user to tariffs', () => {
+        useSubscriptions.mockReturnValue({
+            activeSubscriptions: [],
+            latestSubscription: subscriptionExpired,
+            isLoading: false,
+            error: '',
+        });
 
-        render(<DesktopVpnConnectPage />);
-        fireEvent.click(screen.getByRole('button', { name: 'Перейти к тарифам' }));
+        render(<ConfigScreen />);
+        fireEvent.click(screen.getByRole('button', { name: /Перейти к тарифам/i }));
 
         expect(navigate).toHaveBeenCalledWith('/tariffs');
     });
 
-    test('loads configs for selected active subscription', async () => {
+    test('loads config automatically and copies primary config', async () => {
         useSubscriptions.mockReturnValue({
-            subscriptions: [subscriptionActive],
             activeSubscriptions: [subscriptionActive],
+            latestSubscription: subscriptionActive,
             isLoading: false,
             error: '',
         });
-        fetchSubscriptionConfig.mockResolvedValue(configListSingle);
+        fetchSubscriptionConfig.mockResolvedValue(configListMultiple);
+        copyText.mockResolvedValue();
 
-        render(<DesktopVpnConnectPage />);
-        fireEvent.click(screen.getByRole('button', { name: 'Получить конфигурацию' }));
+        render(<ConfigScreen />);
 
         await waitFor(() => expect(fetchSubscriptionConfig).toHaveBeenCalledWith(subscriptionActive.id));
-        expect(screen.getByText('https://sub.example.com/sub-1')).toBeInTheDocument();
-        expect(screen.queryByText(/Пинг/i)).not.toBeInTheDocument();
-        expect(screen.queryByText(/Скорость/i)).not.toBeInTheDocument();
+        expect(screen.getByText('vless://config-1')).toBeInTheDocument();
+
+        fireEvent.click(screen.getByRole('button', { name: /Скопировать конфиг/i }));
+
+        await waitFor(() => expect(copyText).toHaveBeenCalledWith('vless://config-1'));
+        expect(showAppAlert).toHaveBeenCalledWith('Конфиг скопирован.');
     });
 
-    test('allows switching between multiple subscriptions', async () => {
+    test('platform links use external opener', async () => {
         useSubscriptions.mockReturnValue({
-            subscriptions: [subscriptionExpired, subscriptionActive],
             activeSubscriptions: [subscriptionActive],
+            latestSubscription: subscriptionActive,
             isLoading: false,
             error: '',
         });
         fetchSubscriptionConfig.mockResolvedValue(configListMultiple);
 
-        render(<DesktopVpnConnectPage />);
-        expect(screen.getAllByText('30 дней').length).toBeGreaterThan(0);
-        fireEvent.click(screen.getByRole('button', { name: 'Получить конфигурацию' }));
+        render(<ConfigScreen />);
 
-        await waitFor(() => expect(screen.getByText('vless://config-1')).toBeInTheDocument());
-        expect(screen.getByText('trojan://config-2')).toBeInTheDocument();
-    });
-
-    test('renders honest error when config loading fails', async () => {
-        useSubscriptions.mockReturnValue({
-            subscriptions: [subscriptionActive],
-            activeSubscriptions: [subscriptionActive],
-            isLoading: false,
-            error: '',
-        });
-        fetchSubscriptionConfig.mockRejectedValue({ response: { data: { detail: 'config failed' } } });
-
-        render(<DesktopVpnConnectPage />);
-        fireEvent.click(screen.getByRole('button', { name: 'Получить конфигурацию' }));
-
-        await waitFor(() => expect(screen.getByText('config failed')).toBeInTheDocument());
-    });
-
-    test('platform links open external link helper', () => {
-        useSubscriptions.mockReturnValue({
-            subscriptions: [subscriptionCanceled],
-            activeSubscriptions: [],
-            isLoading: false,
-            error: '',
-        });
-
-        render(<DesktopVpnConnectPage />);
+        await waitFor(() => expect(screen.getByRole('button', { name: 'Windows' })).toBeInTheDocument());
         fireEvent.click(screen.getByRole('button', { name: 'Windows' }));
 
         expect(openExternalLink).toHaveBeenCalled();

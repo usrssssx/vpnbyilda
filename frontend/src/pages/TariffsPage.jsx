@@ -1,8 +1,5 @@
-import { useDeviceDetect } from '../hooks/useDeviceDetect';
-import DesktopTariffsPage from '../components/desktop/TariffsPage';
-import MobileTariffsPage from '../components/mobile/TariffsPage';
+import TariffsScreen from '../components/app/TariffsScreen';
 
 export default function TariffsPage() {
-    const { isMobile } = useDeviceDetect();
-    return isMobile ? <MobileTariffsPage /> : <DesktopTariffsPage />;
+    return <TariffsScreen />;
 }

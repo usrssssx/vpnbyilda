@@ -21,11 +21,12 @@ class TelegramNotificationSevice(NotificationSevice):
         await self.bot.send_message(
             chat_id=user.telegram_id,
             text=(
-                f"🎉 <b>Подписка активирована!</b>\n\n"
-                f"📅 <b>Действует до:</b> {subscription.end_date.strftime('%d.%m.%Y %H:%M')}\n\n"
-                f"✅ Теперь вам доступны все возможности тарифа.\n"
-                f"Приятного использования! 🚀"
+                f"🎉 <b>Подписка активирована</b>\n\n"
+                f"📅 <b>Доступ открыт до:</b> {subscription.end_date.strftime('%d.%m.%Y %H:%M')}\n\n"
+                f"✅ Все возможности тарифа уже доступны.\n"
+                f"Ниже можно сразу открыть приложение, получить конфиг или продлить доступ."
             ),
+            parse_mode="HTML",
             reply_markup = InlineKeyboardMarkup(
                 inline_keyboard=[
                     [
@@ -47,5 +48,4 @@ class TelegramNotificationSevice(NotificationSevice):
 
     async def send_subscription_expired(self, user: User, subscription: Subscription) -> None:
         pass
-
 

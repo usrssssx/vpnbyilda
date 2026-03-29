@@ -1,10 +1,6 @@
 import React from 'react';
-import { Navigate, Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout';
-import ProfilePage from './pages/ProfilePage';
-import SubscriptionPage from './pages/SubscriptionPage';
-import TariffsPage from './pages/TariffsPage';
-import VpnConnectPage from './pages/VpnConnectPage';
+import AppRoutes from './routes/AppRoutes';
 import { useAuth } from './contexts/AuthContext';
 
 function FullScreenState({ title, description }) {
@@ -36,14 +32,7 @@ function App() {
 
     return (
         <Layout>
-            <Routes>
-                <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/subscription" element={<SubscriptionPage />} />
-                <Route path="/subscriptions/:subscriptionId" element={<SubscriptionPage />} />
-                <Route path="/tariffs" element={<TariffsPage />} />
-                <Route path="/vpn" element={<VpnConnectPage />} />
-                <Route path="/" element={<Navigate to="/profile" replace />} />
-            </Routes>
+            <AppRoutes />
         </Layout>
     );
 }

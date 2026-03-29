@@ -17,6 +17,23 @@ class AppConfig(BaseConfig):
     CHAT_TELEGRAM: int = 0
 
     VPN_HELP_ACCOUNT: str = ""
+    SERVICE_NAME: str = "NetRunVPN"
+    SERVICE_MAX_DEVICES: str = "[N]"
+    SERVICE_SUPPORT_CONTACT: str = ""
+    LEGAL_COMPANY_NAME: str = "[ПОЛНОЕ НАИМЕНОВАНИЕ ИП/ООО]"
+    LEGAL_INN: str = "[ИНН]"
+    LEGAL_OGRN: str = "[ОГРН/ОГРНИП]"
+    LEGAL_ADDRESS: str = "[ЮРИДИЧЕСКИЙ/ПОЧТОВЫЙ АДРЕС]"
+    LEGAL_EMAIL: str = "[EMAIL]"
+    LEGAL_SUPPORT_HOURS: str = "[ДНИ/ЧАСЫ]"
+    LEGAL_SITE_URL: str = ""
+    LEGAL_OFFER_URL: str = ""
+    LEGAL_POLICY_URL: str = ""
+    LEGAL_BANK_ACCOUNT: str = "[Р/С]"
+    LEGAL_BANK_NAME: str = "[БАНК]"
+    LEGAL_BANK_BIK: str = "[БИК]"
+    LEGAL_BANK_CORR_ACCOUNT: str = "[К/С]"
+    LEGAL_SIGNATORY: str = "[ФИО / ДОЛЖНОСТЬ]"
 
     DOMAIN: str = ""
     WEB_APP_DOMAIN: str = ""

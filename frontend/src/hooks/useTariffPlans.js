@@ -59,8 +59,8 @@ export function useTariffPlans(navigate) {
             });
             const url = response?.url || '';
 
-            if (url.startsWith('/')) {
-                navigate(url);
+            if (url.startsWith('/') && typeof navigate === 'function') {
+                navigate('/config');
             } else if (url) {
                 window.location.href = url;
             }

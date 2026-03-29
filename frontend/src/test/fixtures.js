@@ -1,8 +1,8 @@
 export const subscriptionActive = {
     id: 'sub-active',
     duration: 30,
-    start_date: '2025-03-01T00:00:00Z',
-    expires_at: '2025-03-31T00:00:00Z',
+    start_date: '2099-03-01T00:00:00Z',
+    expires_at: '2099-03-31T00:00:00Z',
     device_count: 2,
     flag: '🇩🇪',
     name: 'Германия',
@@ -20,6 +20,8 @@ export const subscriptionCanceled = {
 export const subscriptionExpired = {
     ...subscriptionActive,
     id: 'sub-expired',
+    start_date: '2020-03-01T00:00:00Z',
+    expires_at: '2020-03-31T00:00:00Z',
     status: 'expired',
 };
 

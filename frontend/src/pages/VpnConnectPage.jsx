@@ -1,8 +1,5 @@
-import { useDeviceDetect } from '../hooks/useDeviceDetect';
-import DesktopVpnConnectPage from '../components/desktop/VpnConnectPage';
-import MobileVpnConnectPage from '../components/mobile/VpnConnectPage';
+import ConfigScreen from '../components/app/ConfigScreen';
 
 export default function VpnConnectPage() {
-  const { isMobile } = useDeviceDetect();
-  return isMobile ? <MobileVpnConnectPage /> : <DesktopVpnConnectPage />;
+    return <ConfigScreen />;
 }

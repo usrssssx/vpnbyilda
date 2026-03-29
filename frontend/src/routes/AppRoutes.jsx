@@ -7,11 +7,15 @@ import VpnConnectPage from '../pages/VpnConnectPage.jsx';
 export default function AppRoutes() {
     return (
         <Routes>
-            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/" element={<ProfilePage />} />
+            <Route path="/profile" element={<Navigate to="/" replace />} />
             <Route path="/tariffs" element={<TariffsPage />} />
-            <Route path="/subscription" element={<SubscriptionPage />} />
-            <Route path="/vpn" element={<VpnConnectPage />} />
-            <Route path="*" element={<Navigate to="/profile" replace />} />
+            <Route path="/account" element={<SubscriptionPage />} />
+            <Route path="/subscription" element={<Navigate to="/account" replace />} />
+            <Route path="/subscriptions/:subscriptionId" element={<Navigate to="/config" replace />} />
+            <Route path="/vpn" element={<Navigate to="/config" replace />} />
+            <Route path="/config" element={<VpnConnectPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
     );
 } 

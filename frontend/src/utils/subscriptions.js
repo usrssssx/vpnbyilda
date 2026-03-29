@@ -19,6 +19,15 @@ export function getDaysLeft(value) {
     return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
 }
 
+export function getDaysSince(value) {
+    if (!value) {
+        return 0;
+    }
+
+    const diff = Date.now() - new Date(value).getTime();
+    return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+}
+
 export function formatSubscriptionPlan(subscription) {
     if (!subscription) {
         return 'Подписка не найдена';
@@ -60,4 +69,25 @@ export function formatRegion(subscription) {
 
 export function hasActiveSubscription(subscription) {
     return subscription?.status === 'active';
+}
+
+export function getSubscriptionState(subscription) {
+    if (!subscription) {
+        return 'none';
+    }
+
+    if (subscription.status === 'active') {
+        const daysLeft = getDaysLeft(subscription.expires_at);
+        return daysLeft <= 3 ? 'expiring' : 'active';
+    }
+
+    if (subscription.status === 'expired') {
+        return 'expired';
+    }
+
+    if (subscription.status === 'pending') {
+        return 'pending';
+    }
+
+    return 'inactive';
 }
